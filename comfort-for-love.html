@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Always Here For You </title>
+  <title>Always Here For You</title>
   <style>
     :root{
       --bg1:#fff0f5;
@@ -217,6 +217,22 @@
         min-width: 70px;
       }
     }
+
+    .footer-message{
+      position: fixed; 
+      bottom: 110px; /* 上移，避免被底部按钮遮挡 */
+      left: 50%; 
+      transform: translateX(-50%);
+      font-size: 16px; 
+      color: #8b7fb8; 
+      opacity:.8; 
+      user-select:none; 
+      pointer-events:none;
+      text-align: center;
+      line-height: 1.5;
+      text-shadow: 0 0 6px rgba(255,255,255,0.6);
+      z-index: 1001; /* 确保在交互菜单之上 */
+    }
   </style>
 </head>
 <body>
@@ -232,6 +248,12 @@
 
   <div class="time-greeting" id="timeGreeting">早上好！</div>
   <div class="achievement" id="achievement"></div>
+
+  <div class="footer-message">
+    走过灯火通明的店铺<br>
+    走过三三两两的行人<br>
+    走过来来往往的车水马龙 
+  </div>
 
   <div class="interaction-menu">
     <button class="menu-btn" id="loveBtn">💖 送爱心</button>
@@ -495,4 +517,3 @@
   </script>
 </body>
 </html>
-
