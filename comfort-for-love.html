@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Always Here For You - 性能优化版</title>
+  <title>Always Here For You - 完整互动版</title>
   <style>
     :root{
       --bg1:#fff0f5;
@@ -15,15 +15,16 @@
       --soft-blue:#add8e6;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%;margin:0;padding:0;}
+    
     body{
-      margin:0;
       overflow:hidden;
       background:
         radial-gradient(1200px 800px at 25% 35%, var(--bg2), transparent 75%),
         radial-gradient(1000px 700px at 75% 65%, var(--warm-pink), transparent 70%),
         linear-gradient(135deg, #fff5f5, var(--bg1));
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+      transition: background 0.8s ease;
     }
 
     .center-message{
@@ -42,508 +43,455 @@
       text-shadow: 0 0 8px rgba(70,130,180,.6);
       animation: breathe 4s ease-in-out infinite;
       user-select:none;
-      pointer-events:none;
+      pointer-events:auto;
       box-shadow: 0 8px 32px rgba(70,130,180,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
+
+    .center-message:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
     .center-message h1{
       margin:0 0 8px 0;
-      font-size: clamp(32px, 6vw, 72px);
+      font-size: clamp(28px, 5vw, 64px);
       letter-spacing:1px;
       line-height: 1.2;
     }
+
     .center-message p{
       margin: 8px 0 0 0;
       font-size: clamp(16px, 2.5vw, 24px);
       opacity: 0.9;
-      font-weight: 400;
     }
 
-    /* 粒子 - 简化版 */
     .particle{
       position:fixed;
       left:0; top:0;
       will-change: transform;
       pointer-events:none;
       opacity:0;
-      animation: float var(--dur,8s) linear forwards;
+      animation: float var(--dur,6s) linear forwards;
     }
+    
     .particle .emoji{
       display:block;
       transform: translate(-50%, -50%);
       font-size: var(--size, 24px);
     }
 
-    /* 简化的颜色滤镜 */
     .pink { filter: hue-rotate(330deg) saturate(1.2); }
     .blue { filter: hue-rotate(200deg) saturate(1.1); }
     .cheer { filter: hue-rotate(50deg) saturate(1.3); }
     .love { filter: hue-rotate(310deg) saturate(1.4); }
 
-    /* 简化的动画 */
+    .mood-weather {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.9);
+      padding: 15px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+      text-align: center;
+      min-width: 120px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .weather-icon {
+      font-size: 2em;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .weather-text {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .achievement {
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      background: linear-gradient(45deg, #ffd700, #ffed4e);
+      color: #333;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+      transform: translateX(120%);
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 1000;
+      font-size: 14px;
+    }
+
+    .achievement.show {
+      transform: translateX(0);
+    }
+
+    .interaction-menu {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px 25px;
+      border-radius: 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+    }
+
+    .menu-btn {
+      background: linear-gradient(45deg, var(--pink), var(--blue));
+      border: none;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      font-weight: 600;
+      min-width: 80px;
+    }
+
+    .menu-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    .menu-btn:active {
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    .time-greeting {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.9);
+      padding: 12px 18px;
+      border-radius: 20px;
+      color: var(--text);
+      font-size: 14px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      font-weight: 500;
+    }
+
     @keyframes float {
       0% {
         transform: translate(var(--x, 0px), calc(100vh + 30px)) scale(0.8);
         opacity:.0;
       }
-      10% { opacity:.8; }
-      90% { opacity:.6; }
+      10% { opacity:.9; }
+      90% { opacity:.7; }
       100% {
-        transform: translate(calc(var(--x, 0px) + var(--drift, 0px)), -20vh) scale(0.6);
+        transform: translate(calc(var(--x, 0px) + var(--drift, 0px)), -30vh) scale(0.6);
         opacity: 0;
       }
     }
+
     @keyframes breathe {
       0%, 100% { 
         text-shadow: 0 0 8px rgba(70,130,180,.6);
         transform: translate(-50%, -50%) scale(1);
       }
       50% { 
-        text-shadow: 0 0 12px rgba(70,130,180,.8);
-        transform: translate(-50%, -50%) scale(1.01);
+        text-shadow: 0 0 12px rgba(70,130,180,.9);
+        transform: translate(-50%, -50%) scale(1.02);
       }
     }
 
-    .footer-message{
-      position: fixed; 
-      bottom: 20px; 
-      left: 50%; 
-      transform: translateX(-50%);
-      font-size: 16px; 
-      color: #8b7fb8; 
-      opacity:.8; 
-      user-select:none; 
-      pointer-events:none;
-      text-align: center;
-      line-height: 1.5;
-    }
-
-    /* 性能监控面板 */
-    .perf-monitor {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      z-index: 1000;
-    }
-
-    /* 鼠标跟随光环 */
-    .mouse-glow {
-      position: fixed;
-      pointer-events: none;
-      width: 80px;
-      height: 80px;
-      background: radial-gradient(circle, rgba(255,182,193,0.3) 0%, rgba(135,206,235,0.2) 50%, transparent 100%);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: all 0.1s ease-out;
-      z-index: 1;
-      animation: glow-pulse 3s ease-in-out infinite;
-    }
-
-    @keyframes glow-pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-    }
-
-    /* 温馨提示消息 */
-    .warm-message {
-      position: fixed;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.9);
-      color: var(--text);
-      padding: 15px 25px;
-      border-radius: 25px;
-      font-size: 18px;
-      font-weight: 500;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      opacity: 0;
-      animation: message-fade-in 0.5s ease-out forwards;
-      z-index: 1000;
-      max-width: 80vw;
-      line-height: 1.4;
-    }
-
-    @keyframes message-fade-in {
-      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-
-    /* 情感温度计 */
-    .warmth-meter {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 40px;
-      height: 200px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
-      overflow: hidden;
-      z-index: 1000;
-    }
-
-    .warmth-fill {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: linear-gradient(0deg, 
-        #ff6b9d 0%, 
-        #ffc3e0 50%, 
-        #87ceeb 100%);
-      transition: height 0.8s ease-out;
-      border-radius: 0 0 18px 18px;
-    }
-
-    .warmth-label {
-      position: absolute;
-      bottom: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--text);
-      font-size: 12px;
-      text-align: center;
-      opacity: 0.8;
-    }
-
-    /* 互动提示 */
-    .interaction-hint {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      color: rgba(70,130,180,0.7);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    /* 特殊效果触发区域 */
-    .special-zone {
-      position: fixed;
-      width: 120px;
-      height: 120px;
-      border: 2px dashed rgba(255,182,193,0.3);
-      border-radius: 50%;
-      top: 70%;
-      left: 80%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      opacity: 0;
-      animation: zone-hint 4s ease-in-out infinite;
-    }
-
-    @keyframes zone-hint {
-      0%, 80%, 100% { opacity: 0; }
-      10%, 70% { opacity: 0.6; }
-    }
-
-    /* 减少动画的媒体查询 */
-    @media (prefers-reduced-motion: reduce) {
-      .particle { animation: none; opacity: .5; }
-      .center-message { animation: none; }
+    @media (max-width: 768px) {
+      .interaction-menu {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 20px;
+      }
+      .menu-btn {
+        font-size: 14px;
+        padding: 10px 15px;
+        min-width: 70px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="center-message">
-    <h1>Everything will be fine</h1>
-    <p>💕</p>
+  <div class="center-message" id="centerMessage">
+    <h1 id="mainTitle">Everything will be fine</h1>
+    <p id="mainEmoji">💕</p>
   </div>
   
-  <div class="footer-message">
-    走过灯火通明的店铺<br>
-    走过三三两两的行人<br>
-    走过来来往往的车水马龙 
+  <div class="mood-weather">
+    <span class="weather-icon" id="weatherIcon">☀️</span>
+    <div class="weather-text" id="weatherText">心情晴朗</div>
   </div>
 
-  <!-- 鼠标跟随光环 -->
-  <div class="mouse-glow" id="mouseGlow"></div>
+  <div class="time-greeting" id="timeGreeting">早上好！</div>
+  <div class="achievement" id="achievement"></div>
 
-  <!-- 情感温度计 -->
-  <div class="warmth-meter">
-    <div class="warmth-fill" id="warmthFill" style="height: 30%;"></div>
-    <div class="warmth-label">温暖度</div>
-  </div>
-
-  <!-- 互动提示 -->
-  <div class="interaction-hint">
-    💡 互动提示:<br>
-    • 移动鼠标感受温暖<br>
-    • 按空格键获得鼓励<br>
-    • 按H键获得拥抱<br>
-    • 点击任意位置释放爱心
-  </div>
-
-  <!-- 特殊效果区域 -->
-  <div class="special-zone"></div>
-
-  <!-- 性能监控面板 -->
-  <div class="perf-monitor">
-    <div>粒子数: <span id="particle-count">0</span></div>
-    <div>FPS: <span id="fps">--</span></div>
-    <div>内存: <span id="memory">--</span></div>
+  <div class="interaction-menu">
+    <button class="menu-btn" id="loveBtn">💖 送爱心</button>
+    <button class="menu-btn" id="hugBtn">🤗 拥抱</button>
+    <button class="menu-btn" id="weatherBtn">🌈 换心情</button>
+    <button class="menu-btn" id="celebrateBtn">🎉 庆祝</button>
   </div>
 
   <script>
-    (() => {
-      // 极度保守的性能参数
-      const MAX_PARTICLES = 30;
-      const SPAWN_PER_TICK = 1;
-      const TICK_MS = 500;
+    // 全局变量
+    const MAX_PARTICLES = 35;
+    let count = 0;
+    let interactionCount = 0;
+    let currentWeather = 0;
 
-      const emojis = [
-        {text:'💖', cls:'pink'},
-        {text:'💙', cls:'blue'},
-        {text:'💕', cls:'love'},
-        {text:'💗', cls:'pink'},
-        {text:'✨', cls:'cheer'},
-      ];
+    const emojis = [
+      {text:'💖', cls:'pink'},
+      {text:'💙', cls:'blue'}, 
+      {text:'💕', cls:'love'},
+      {text:'✨', cls:'cheer'},
+      {text:'🌟', cls:'cheer'},
+    ];
 
-      let count = 0;
-      let running = true;
-      let frameCount = 0;
-      let lastTime = performance.now();
-      let warmthLevel = 30; // 初始温暖度
-
-      // 温馨提示消息数组
-      const warmMessages = [
-        "🌟 你是独一无二的存在",
-        "💝 每一天都是新的开始", 
-        "🌈 困难只是暂时的",
-        "💪 你比想象中更坚强",
-        "🌸 美好正在路上",
-        "💖 有人在默默关心着你",
-        "✨ 小小的进步也值得庆祝",
-        "🤗 给自己一个温暖的拥抱",
-        "🌅 明天会更好",
-        "💕 你值得所有美好的事情"
-      ];
-
-      function rand(min, max){ return Math.random() * (max - min) + min; }
-
-      function createParticle() {
-        if (count >= MAX_PARTICLES) return;
-
-        const item = emojis[Math.floor(Math.random() * emojis.length)];
-        const el = document.createElement('div');
-        el.className = `particle ${item.cls}`;
-
-        const span = document.createElement('span');
-        span.className = 'emoji';
-        span.textContent = item.text;
-        el.appendChild(span);
-
-        const size = rand(18, 32);
-        const x = rand(0, window.innerWidth);
-        const drift = rand(-100, 100);
-        const dur = rand(6, 10);
-
-        el.style.setProperty('--size', size + 'px');
-        el.style.setProperty('--x', x + 'px');
-        el.style.setProperty('--drift', drift + 'px');
-        el.style.setProperty('--dur', dur + 's');
-
-        document.body.appendChild(el);
-        count++;
-
-        el.addEventListener('animationend', () => {
-          el.remove();
-          count--;
-        });
+    const weathers = [
+      {
+        icon: '☀️', 
+        text: '心情晴朗',
+        bg: `
+          radial-gradient(1200px 800px at 25% 35%, #f0f8ff, transparent 75%),
+          radial-gradient(1000px 700px at 75% 65%, #ffc0cb, transparent 70%),
+          linear-gradient(135deg, #fff5f5, #fff0f5)
+        `
+      },
+      {
+        icon: '🌈', 
+        text: '彩虹心情',
+        bg: `
+          radial-gradient(1200px 800px at 25% 35%, #ff9a9e, transparent 75%),
+          radial-gradient(1000px 700px at 75% 65%, #fecfef, transparent 70%),
+          linear-gradient(135deg, #ffeaa7, #fab1a0)
+        `
+      },
+      {
+        icon: '🌸', 
+        text: '春意盎然',
+        bg: `
+          radial-gradient(1200px 800px at 25% 35%, #ffeaa7, transparent 75%),
+          radial-gradient(1000px 700px at 75% 65%, #fab1a0, transparent 70%),
+          linear-gradient(135deg, #fbc2eb, #a6c1ee)
+        `
+      },
+      {
+        icon: '⭐', 
+        text: '星光灿烂',
+        bg: `
+          radial-gradient(1200px 800px at 25% 35%, #667eea, transparent 75%),
+          radial-gradient(1000px 700px at 75% 65%, #764ba2, transparent 70%),
+          linear-gradient(135deg, #2c3e50, #3498db)
+        `
+      },
+      {
+        icon: '🎈', 
+        text: '轻松愉快',
+        bg: `
+          radial-gradient(1200px 800px at 25% 35%, #fbc2eb, transparent 75%),
+          radial-gradient(1000px 700px at 75% 65%, #a6c1ee, transparent 70%),
+          linear-gradient(135deg, #e0c3fc, #9bb5ff)
+        `
       }
+    ];
 
-      function tick() {
-        if (!running) return;
-        createParticle();
-      }
+    // 工具函数
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
 
-      // 显示温馨提示消息
-      function showWarmMessage() {
-        const message = warmMessages[Math.floor(Math.random() * warmMessages.length)];
-        const messageEl = document.createElement('div');
-        messageEl.className = 'warm-message';
-        messageEl.textContent = message;
-        document.body.appendChild(messageEl);
+    // 时间问候
+    function updateTimeGreeting() {
+      const hour = new Date().getHours();
+      const greetingEl = document.getElementById('timeGreeting');
+      
+      if (hour < 6) greetingEl.textContent = '夜深了，早点休息 🌙';
+      else if (hour < 12) greetingEl.textContent = '早上好！新的一天开始了 ☀️';
+      else if (hour < 18) greetingEl.textContent = '下午好！继续加油 🌤️';
+      else greetingEl.textContent = '晚上好！辛苦了一天 🌆';
+    }
 
-        setTimeout(() => {
-          messageEl.style.animation = 'message-fade-in 0.5s ease-out reverse forwards';
-          setTimeout(() => messageEl.remove(), 500);
-        }, 3000);
+    // 成就系统
+    function showAchievement(text) {
+      const achievement = document.getElementById('achievement');
+      achievement.textContent = text;
+      achievement.classList.add('show');
+      setTimeout(() => {
+        achievement.classList.remove('show');
+      }, 3500);
+    }
 
-        // 增加温暖度
-        increaseWarmth(10);
-      }
+    // 创建粒子
+    function createParticle(emoji = null, x = null) {
+      if (count >= MAX_PARTICLES) return;
 
-      // 更新温暖度
-      function increaseWarmth(amount) {
-        warmthLevel = Math.min(100, warmthLevel + amount);
-        document.getElementById('warmthFill').style.height = warmthLevel + '%';
-      }
+      const item = emoji || emojis[Math.floor(Math.random() * emojis.length)];
+      const el = document.createElement('div');
+      el.className = `particle ${item.cls}`;
 
-      // 特殊爱心爆发效果
-      function createHeartBurst(x, y) {
-        const heartEmojis = ['💖', '💕', '💗', '💞', '💝'];
-        for (let i = 0; i < 8; i++) {
-          setTimeout(() => {
-            if (count < MAX_PARTICLES) {
-              const el = document.createElement('div');
-              el.className = 'particle love';
-              
-              const span = document.createElement('span');
-              span.className = 'emoji';
-              span.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
-              el.appendChild(span);
+      const span = document.createElement('span');
+      span.className = 'emoji';
+      span.textContent = item.text;
+      el.appendChild(span);
 
-              const angle = (i / 8) * Math.PI * 2;
-              const distance = rand(50, 120);
-              const targetX = x + Math.cos(angle) * distance;
-              const targetY = y + Math.sin(angle) * distance;
+      const size = rand(18, 32);
+      const startX = x !== null ? x : rand(0, window.innerWidth);
+      const drift = rand(-120, 120);
+      const dur = rand(5, 8);
 
-              el.style.setProperty('--size', rand(25, 35) + 'px');
-              el.style.setProperty('--x', targetX + 'px');
-              el.style.setProperty('--drift', rand(-30, 30) + 'px');
-              el.style.setProperty('--dur', rand(3, 5) + 's');
+      el.style.setProperty('--size', size + 'px');
+      el.style.setProperty('--x', startX + 'px');
+      el.style.setProperty('--drift', drift + 'px');
+      el.style.setProperty('--dur', dur + 's');
 
-              document.body.appendChild(el);
-              count++;
+      document.body.appendChild(el);
+      count++;
 
-              el.addEventListener('animationend', () => {
-                el.remove();
-                count--;
-              });
-            }
-          }, i * 80);
-        }
-      }
-
-      // 创建拥抱效果
-      function createHugEffect() {
-        const hugEmojis = ['🤗', '🫂', '💝', '🌟'];
-        for (let i = 0; i < 6; i++) {
-          setTimeout(() => {
-            if (count < MAX_PARTICLES) {
-              const el = document.createElement('div');
-              el.className = 'particle cheer';
-              
-              const span = document.createElement('span');
-              span.className = 'emoji';
-              span.textContent = hugEmojis[Math.floor(Math.random() * hugEmojis.length)];
-              el.appendChild(span);
-
-              el.style.setProperty('--size', rand(30, 45) + 'px');
-              el.style.setProperty('--x', rand(window.innerWidth * 0.3, window.innerWidth * 0.7) + 'px');
-              el.style.setProperty('--drift', rand(-80, 80) + 'px');
-              el.style.setProperty('--dur', rand(4, 7) + 's');
-
-              document.body.appendChild(el);
-              count++;
-
-              el.addEventListener('animationend', () => {
-                el.remove();
-                count--;
-              });
-            }
-          }, i * 100);
-        }
-      }
-
-      // 性能监控
-      function updatePerf() {
-        const now = performance.now();
-        frameCount++;
-        
-        if (now - lastTime >= 1000) {
-          const fps = Math.round(frameCount * 1000 / (now - lastTime));
-          document.getElementById('fps').textContent = fps;
-          document.getElementById('particle-count').textContent = count;
-          
-          if (performance.memory) {
-            const memory = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-            document.getElementById('memory').textContent = memory + 'MB';
-          }
-          
-          frameCount = 0;
-          lastTime = now;
-        }
-        
-        requestAnimationFrame(updatePerf);
-      }
-
-      let timer = setInterval(tick, TICK_MS);
-
-      document.addEventListener('visibilitychange', () => {
-        running = !document.hidden;
+      el.addEventListener('animationend', () => {
+        el.remove();
+        count--;
       });
+    }
 
-      // 减少初始爆发
+    // 互动功能
+    function sendLove() {
       for (let i = 0; i < 5; i++) {
-        setTimeout(() => createParticle(), i * 200);
+        setTimeout(() => {
+          createParticle({text: '💖', cls: 'love'});
+        }, i * 120);
       }
+      interactionCount++;
+      if (interactionCount === 5) showAchievement('💕 爱心大使达成！');
+    }
 
-      // 简化点击事件
-      document.addEventListener('click', (e) => {
-        if (count < MAX_PARTICLES - 2) {
-          createParticle();
-          setTimeout(() => createParticle(), 100);
-        }
-        increaseWarmth(5);
-      });
+    function getHug() {
+      const hugEmojis = ['🤗', '🫂', '💝'];
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          createParticle({text: hugEmojis[i % hugEmojis.length], cls: 'cheer'});
+        }, i * 180);
+      }
+      
+      const titleEl = document.getElementById('mainTitle');
+      const originalTitle = titleEl.textContent;
+      titleEl.textContent = 'You are loved 🤗';
+      
+      setTimeout(() => {
+        titleEl.textContent = originalTitle;
+      }, 2500);
+      
+      showAchievement('🤗 温暖拥抱送达！');
+    }
 
-      // 鼠标移动跟随效果
-      document.addEventListener('mousemove', (e) => {
-        const mouseGlow = document.getElementById('mouseGlow');
-        mouseGlow.style.left = e.clientX + 'px';
-        mouseGlow.style.top = e.clientY + 'px';
-        
-        // 随机在鼠标附近增加温暖度
-        if (Math.random() < 0.01) { // 1%概率
-          increaseWarmth(1);
-        }
-      });
+    function changeWeather() {
+      currentWeather = (currentWeather + 1) % weathers.length;
+      const weather = weathers[currentWeather];
+      
+      document.getElementById('weatherIcon').textContent = weather.icon;
+      document.getElementById('weatherText').textContent = weather.text;
+      document.body.style.background = weather.bg;
+      
+      showAchievement(`🌈 心情切换到：${weather.text}`);
+      
+      // 庆祝粒子
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          createParticle({text: weather.icon, cls: 'cheer'});
+        }, i * 100);
+      }
+    }
 
-      // 键盘互动
-      document.addEventListener('keydown', (e) => {
-        switch(e.code) {
-          case 'Space':
-            e.preventDefault();
-            showWarmMessage();
-            break;
-          case 'KeyH':
-            createHugEffect();
-            increaseWarmth(15);
-            break;
-          case 'KeyL':
-            createHeartBurst(window.innerWidth / 2, window.innerHeight / 2);
-            increaseWarmth(20);
-            break;
-        }
-      });
+    function celebrate() {
+      const celebrateEmojis = ['🎉', '🎊', '✨', '🌟', '🎈'];
+      for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+          const emoji = celebrateEmojis[Math.floor(Math.random() * celebrateEmojis.length)];
+          createParticle({text: emoji, cls: 'cheer'}, rand(0, window.innerWidth));
+        }, i * 80);
+      }
+      showAchievement('🎉 庆祝时刻！生活美好！');
+    }
 
-      // 定期减少温暖度，鼓励互动
-      setInterval(() => {
-        if (warmthLevel > 10) {
-          warmthLevel = Math.max(10, warmthLevel - 2);
-          document.getElementById('warmthFill').style.height = warmthLevel + '%';
-        }
-      }, 5000);
+    // 事件监听
+    document.getElementById('loveBtn').addEventListener('click', sendLove);
+    document.getElementById('hugBtn').addEventListener('click', getHug);
+    document.getElementById('weatherBtn').addEventListener('click', changeWeather);
+    document.getElementById('celebrateBtn').addEventListener('click', celebrate);
 
-      // 定期显示鼓励消息
-      setInterval(() => {
-        if (Math.random() < 0.3) { // 30%概率
-          showWarmMessage();
-        }
-      }, 15000);
+    // 中心消息点击
+    document.getElementById('centerMessage').addEventListener('click', () => {
+      const messages = [
+        'You are enough 💖',
+        'Keep going 💪', 
+        'You matter 🌟',
+        'Believe in yourself ✨',
+        'You are loved 💕',
+        'Tomorrow will be better 🌅',
+        'You are stronger than you think 💪',
+        'Every step counts 👣'
+      ];
+      
+      const titleEl = document.getElementById('mainTitle');
+      const originalTitle = titleEl.textContent;
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      
+      titleEl.textContent = randomMessage;
+      
+      setTimeout(() => {
+        titleEl.textContent = originalTitle;
+      }, 3000);
 
-      // 启动性能监控
-      updatePerf();
-    })();
+      // 创建点击效果
+      for (let i = 0; i < 4; i++) {
+        setTimeout(() => createParticle(), i * 150);
+      }
+    });
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      switch(e.code) {
+        case 'Space':
+          e.preventDefault();
+          sendLove();
+          break;
+        case 'KeyH':
+          getHug();
+          break;
+        case 'KeyW':
+          changeWeather();
+          break;
+        case 'KeyC':
+          celebrate();
+          break;
+      }
+    });
+
+    // 初始化
+    updateTimeGreeting();
+    setInterval(updateTimeGreeting, 60000);
+
+    // 自动生成背景粒子
+    setInterval(() => {
+      if (Math.random() < 0.4) createParticle();
+    }, 2500);
+
+    // 初始欢迎效果
+    setTimeout(() => {
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => createParticle(), i * 300);
+      }
+      showAchievement('🌟 欢迎来到温暖空间！');
+    }, 1000);
+
+    console.log('🌟 所有功能已加载完成！');
   </script>
 </body>
 </html>
