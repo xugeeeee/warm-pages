@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Always Here For You</title>
+  <title>Always Here For You - 性能优化版</title>
   <style>
     :root{
       --bg1:#fff0f5;
@@ -131,6 +131,119 @@
       z-index: 1000;
     }
 
+    /* 鼠标跟随光环 */
+    .mouse-glow {
+      position: fixed;
+      pointer-events: none;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, rgba(255,182,193,0.3) 0%, rgba(135,206,235,0.2) 50%, transparent 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease-out;
+      z-index: 1;
+      animation: glow-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+    }
+
+    /* 温馨提示消息 */
+    .warm-message {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.9);
+      color: var(--text);
+      padding: 15px 25px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: 500;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      opacity: 0;
+      animation: message-fade-in 0.5s ease-out forwards;
+      z-index: 1000;
+      max-width: 80vw;
+      line-height: 1.4;
+    }
+
+    @keyframes message-fade-in {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* 情感温度计 */
+    .warmth-meter {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 40px;
+      height: 200px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      overflow: hidden;
+      z-index: 1000;
+    }
+
+    .warmth-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(0deg, 
+        #ff6b9d 0%, 
+        #ffc3e0 50%, 
+        #87ceeb 100%);
+      transition: height 0.8s ease-out;
+      border-radius: 0 0 18px 18px;
+    }
+
+    .warmth-label {
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text);
+      font-size: 12px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    /* 互动提示 */
+    .interaction-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: rgba(70,130,180,0.7);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* 特殊效果触发区域 */
+    .special-zone {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      border: 2px dashed rgba(255,182,193,0.3);
+      border-radius: 50%;
+      top: 70%;
+      left: 80%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+      animation: zone-hint 4s ease-in-out infinite;
+    }
+
+    @keyframes zone-hint {
+      0%, 80%, 100% { opacity: 0; }
+      10%, 70% { opacity: 0.6; }
+    }
+
     /* 减少动画的媒体查询 */
     @media (prefers-reduced-motion: reduce) {
       .particle { animation: none; opacity: .5; }
@@ -149,6 +262,27 @@
     走过三三两两的行人<br>
     走过来来往往的车水马龙 
   </div>
+
+  <!-- 鼠标跟随光环 -->
+  <div class="mouse-glow" id="mouseGlow"></div>
+
+  <!-- 情感温度计 -->
+  <div class="warmth-meter">
+    <div class="warmth-fill" id="warmthFill" style="height: 30%;"></div>
+    <div class="warmth-label">温暖度</div>
+  </div>
+
+  <!-- 互动提示 -->
+  <div class="interaction-hint">
+    💡 互动提示:<br>
+    • 移动鼠标感受温暖<br>
+    • 按空格键获得鼓励<br>
+    • 按H键获得拥抱<br>
+    • 点击任意位置释放爱心
+  </div>
+
+  <!-- 特殊效果区域 -->
+  <div class="special-zone"></div>
 
   <!-- 性能监控面板 -->
   <div class="perf-monitor">
@@ -176,6 +310,21 @@
       let running = true;
       let frameCount = 0;
       let lastTime = performance.now();
+      let warmthLevel = 30; // 初始温暖度
+
+      // 温馨提示消息数组
+      const warmMessages = [
+        "🌟 你是独一无二的存在",
+        "💝 每一天都是新的开始", 
+        "🌈 困难只是暂时的",
+        "💪 你比想象中更坚强",
+        "🌸 美好正在路上",
+        "💖 有人在默默关心着你",
+        "✨ 小小的进步也值得庆祝",
+        "🤗 给自己一个温暖的拥抱",
+        "🌅 明天会更好",
+        "💕 你值得所有美好的事情"
+      ];
 
       function rand(min, max){ return Math.random() * (max - min) + min; }
 
@@ -213,6 +362,96 @@
       function tick() {
         if (!running) return;
         createParticle();
+      }
+
+      // 显示温馨提示消息
+      function showWarmMessage() {
+        const message = warmMessages[Math.floor(Math.random() * warmMessages.length)];
+        const messageEl = document.createElement('div');
+        messageEl.className = 'warm-message';
+        messageEl.textContent = message;
+        document.body.appendChild(messageEl);
+
+        setTimeout(() => {
+          messageEl.style.animation = 'message-fade-in 0.5s ease-out reverse forwards';
+          setTimeout(() => messageEl.remove(), 500);
+        }, 3000);
+
+        // 增加温暖度
+        increaseWarmth(10);
+      }
+
+      // 更新温暖度
+      function increaseWarmth(amount) {
+        warmthLevel = Math.min(100, warmthLevel + amount);
+        document.getElementById('warmthFill').style.height = warmthLevel + '%';
+      }
+
+      // 特殊爱心爆发效果
+      function createHeartBurst(x, y) {
+        const heartEmojis = ['💖', '💕', '💗', '💞', '💝'];
+        for (let i = 0; i < 8; i++) {
+          setTimeout(() => {
+            if (count < MAX_PARTICLES) {
+              const el = document.createElement('div');
+              el.className = 'particle love';
+              
+              const span = document.createElement('span');
+              span.className = 'emoji';
+              span.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+              el.appendChild(span);
+
+              const angle = (i / 8) * Math.PI * 2;
+              const distance = rand(50, 120);
+              const targetX = x + Math.cos(angle) * distance;
+              const targetY = y + Math.sin(angle) * distance;
+
+              el.style.setProperty('--size', rand(25, 35) + 'px');
+              el.style.setProperty('--x', targetX + 'px');
+              el.style.setProperty('--drift', rand(-30, 30) + 'px');
+              el.style.setProperty('--dur', rand(3, 5) + 's');
+
+              document.body.appendChild(el);
+              count++;
+
+              el.addEventListener('animationend', () => {
+                el.remove();
+                count--;
+              });
+            }
+          }, i * 80);
+        }
+      }
+
+      // 创建拥抱效果
+      function createHugEffect() {
+        const hugEmojis = ['🤗', '🫂', '💝', '🌟'];
+        for (let i = 0; i < 6; i++) {
+          setTimeout(() => {
+            if (count < MAX_PARTICLES) {
+              const el = document.createElement('div');
+              el.className = 'particle cheer';
+              
+              const span = document.createElement('span');
+              span.className = 'emoji';
+              span.textContent = hugEmojis[Math.floor(Math.random() * hugEmojis.length)];
+              el.appendChild(span);
+
+              el.style.setProperty('--size', rand(30, 45) + 'px');
+              el.style.setProperty('--x', rand(window.innerWidth * 0.3, window.innerWidth * 0.7) + 'px');
+              el.style.setProperty('--drift', rand(-80, 80) + 'px');
+              el.style.setProperty('--dur', rand(4, 7) + 's');
+
+              document.body.appendChild(el);
+              count++;
+
+              el.addEventListener('animationend', () => {
+                el.remove();
+                count--;
+              });
+            }
+          }, i * 100);
+        }
       }
 
       // 性能监控
@@ -254,7 +493,53 @@
           createParticle();
           setTimeout(() => createParticle(), 100);
         }
+        increaseWarmth(5);
       });
+
+      // 鼠标移动跟随效果
+      document.addEventListener('mousemove', (e) => {
+        const mouseGlow = document.getElementById('mouseGlow');
+        mouseGlow.style.left = e.clientX + 'px';
+        mouseGlow.style.top = e.clientY + 'px';
+        
+        // 随机在鼠标附近增加温暖度
+        if (Math.random() < 0.01) { // 1%概率
+          increaseWarmth(1);
+        }
+      });
+
+      // 键盘互动
+      document.addEventListener('keydown', (e) => {
+        switch(e.code) {
+          case 'Space':
+            e.preventDefault();
+            showWarmMessage();
+            break;
+          case 'KeyH':
+            createHugEffect();
+            increaseWarmth(15);
+            break;
+          case 'KeyL':
+            createHeartBurst(window.innerWidth / 2, window.innerHeight / 2);
+            increaseWarmth(20);
+            break;
+        }
+      });
+
+      // 定期减少温暖度，鼓励互动
+      setInterval(() => {
+        if (warmthLevel > 10) {
+          warmthLevel = Math.max(10, warmthLevel - 2);
+          document.getElementById('warmthFill').style.height = warmthLevel + '%';
+        }
+      }, 5000);
+
+      // 定期显示鼓励消息
+      setInterval(() => {
+        if (Math.random() < 0.3) { // 30%概率
+          showWarmMessage();
+        }
+      }, 15000);
 
       // 启动性能监控
       updatePerf();
@@ -262,4 +547,3 @@
   </script>
 </body>
 </html>
-
