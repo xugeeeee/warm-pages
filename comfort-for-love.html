@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Always Here For You</title>
+  <style>
+    :root{
+      --bg1:#fff0f5;
+      --bg2:#f0f8ff;
+      --blue:#87ceeb;
+      --pink:#ffb6c1;
+      --text:#4682b4;
+      --warm-pink:#ffc0cb;
+      --soft-blue:#add8e6;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      overflow:hidden;
+      background:
+        radial-gradient(1400px 900px at 25% 35%, var(--bg2), transparent 75%),
+        radial-gradient(1200px 800px at 75% 65%, var(--warm-pink), transparent 70%),
+        radial-gradient(800px 600px at 50% 20%, #ffe4e1, transparent 60%),
+        linear-gradient(135deg, #fff5f5, var(--bg1));
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    }
+
+    .center-message{
+      position:fixed;
+      top:45%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      color: var(--text);
+      font-weight:600;
+      text-align:center;
+      padding: 20px 25px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      text-shadow:
+        0 0 8px rgba(70,130,180,.8),
+        0 0 16px rgba(70,130,180,.5),
+        0 0 32px rgba(70,130,180,.3);
+      animation: breathe 4s ease-in-out infinite, float-gentle 6s ease-in-out infinite;
+      user-select:none;
+      pointer-events:none;
+      box-shadow: 0 8px 32px rgba(70,130,180,0.2);
+    }
+    .center-message h1{
+      margin:0 0 8px 0;
+      font-size: clamp(32px, 6vw, 72px);
+      letter-spacing:1px;
+      line-height: 1.2;
+    }
+    .center-message p{
+      margin: 8px 0 0 0;
+      font-size: clamp(16px, 2.5vw, 24px);
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    /* 爱心和表情粒子 */
+    .particle{
+      position:fixed;
+      left:0; top:0;
+      will-change: transform, opacity, filter;
+      pointer-events:none;
+      opacity:0;
+      animation: float var(--dur,8s) linear forwards, fade var(--dur,8s) ease-out forwards;
+    }
+    .particle .emoji{
+      display:block;
+      transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+      font-size: var(--size, 24px);
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    /* 颜色滤镜 */
+    .pink { 
+      filter: drop-shadow(0 0 12px rgba(255, 182, 193, .9)) 
+              drop-shadow(0 0 24px rgba(255, 182, 193, .4)); 
+    }
+    .blue { 
+      filter: drop-shadow(0 0 12px rgba(135, 206, 235, .9)) 
+              drop-shadow(0 0 24px rgba(135, 206, 235, .4)); 
+    }
+    .cheer { 
+      filter: drop-shadow(0 0 12px rgba(255, 215, 0, .8)) 
+              drop-shadow(0 0 24px rgba(255, 215, 0, .4)); 
+    }
+    .love { 
+      filter: drop-shadow(0 0 12px rgba(255, 105, 180, .9)) 
+              drop-shadow(0 0 24px rgba(255, 105, 180, .4)); 
+    }
+
+    /* 动画效果 */
+    @keyframes float {
+      0% {
+        transform: translate(var(--x, 0px), calc(100vh + 30px)) rotate(0deg) scale(0.8);
+        opacity:.0;
+      }
+      5% { opacity:.9; transform: translate(var(--x, 0px), calc(100vh + 10px)) rotate(10deg) scale(1); }
+      15% { opacity:.95; }
+      85% { opacity:.8; }
+      100% {
+        transform: translate(calc(var(--x, 0px) + var(--drift, 0px)), -20vh) rotate(var(--rotEnd, 360deg)) scale(0.6);
+        opacity: 0;
+      }
+    }
+    @keyframes fade {
+      0% { opacity: .0; }
+      8% { opacity: .95; }
+      15% { opacity: 1; }
+      75% { opacity: .9; }
+      100% { opacity: 0; }
+    }
+    @keyframes breathe {
+      0%, 100% { 
+        text-shadow: 0 0 8px rgba(70,130,180,.6), 0 0 16px rgba(70,130,180,.4);
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% { 
+        text-shadow: 0 0 12px rgba(70,130,180,1), 0 0 24px rgba(70,130,180,.8), 0 0 36px rgba(70,130,180,.5);
+        transform: translate(-50%, -50%) scale(1.02);
+      }
+    }
+    @keyframes float-gentle {
+      0%,100% { transform: translate(-50%, -50%) translateY(0px); }
+      25% { transform: translate(-50%, -50%) translateY(-3px); }
+      75% { transform: translate(-50%, -50%) translateY(3px); }
+    }
+
+    /* 无障碍：减少动画 */
+    @media (prefers-reduced-motion: reduce) {
+      .particle { animation: none; opacity: .8; }
+      .center-message { animation: breathe 6s ease-in-out infinite; }
+    }
+
+    .footer-message{
+      position: fixed; 
+      bottom: 20px; 
+      left: 50%; 
+      transform: translateX(-50%);
+      font-size: 16px; 
+      color: #8b7fb8; 
+      opacity:.8; 
+      user-select:none; 
+      pointer-events:none;
+      text-align: center;
+      line-height: 1.5;
+      text-shadow: 0 0 6px rgba(255,255,255,0.6);
+    }
+
+    /* 背景装饰心形 */
+    .bg-heart {
+      position: fixed;
+      font-size: 80px;
+      opacity: 0.05;
+      pointer-events: none;
+      color: var(--pink);
+      animation: pulse 8s ease-in-out infinite;
+      z-index: -1;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.03; transform: scale(1); }
+      50% { opacity: 0.08; transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景装饰心形 -->
+  <div class="bg-heart" style="top:10%; left:10%;">💕</div>
+  <div class="bg-heart" style="top:20%; right:15%;">💖</div>
+  <div class="bg-heart" style="bottom:25%; left:8%;">💙</div>
+  <div class="bg-heart" style="bottom:15%; right:12%;">💜</div>
+  <div class="bg-heart" style="top:60%; left:5%; font-size:60px;">🌸</div>
+  <div class="bg-heart" style="top:30%; right:8%; font-size:60px;">✨</div>
+
+  <div class="center-message">
+    <h1>Everything will be fine</h1>
+    <p>💕</p>
+  </div>
+  
+  <div class="footer-message">
+    走过灯火通明的店铺<br>
+    走过三三两两的行人<br>
+    走过来来往往的车水马龙 
+  </div>
+
+  <script>
+    (() => {
+      // 调低这些数值以减少渲染压力，避免掉帧
+      const MAX_PARTICLES = 140;
+      const SPAWN_PER_TICK = 3;
+      const TICK_MS = 220;
+
+      const emojis = [
+        {text:'💖', cls:'pink'}, // 粉色爱心
+        {text:'💙', cls:'blue'}, // 蓝色爱心
+        {text:'💕', cls:'love'}, // 双心
+        {text:'💗', cls:'pink'}, // 跳动爱心
+        {text:'💞', cls:'love'}, // 旋转心
+        {text:'💪', cls:'cheer'}, // 加油
+        {text:'🌸', cls:'pink'}, // 樱花
+        {text:'✨', cls:'cheer'}, // 星星
+        {text:'🌟', cls:'cheer'}, // 闪亮星星
+        {text:'💜', cls:'love'}, // 紫心
+        {text:'🤗', cls:'cheer'}, // 拥抱
+        {text:'🌺', cls:'pink'}, // 花朵
+      ];
+
+      let count = 0;
+      let running = true;
+
+      function rand(min, max){ return Math.random() * (max - min) + min; }
+
+      function createParticle() {
+        if (count >= MAX_PARTICLES) return;
+
+        // 更多爱心，少一些其他
+        const typeRand = Math.random();
+        let item;
+        if (typeRand < 0.25) item = emojis[0]; // 💖
+        else if (typeRand < 0.45) item = emojis[1]; // 💙
+        else if (typeRand < 0.6) item = emojis[2]; // 💕
+        else if (typeRand < 0.75) item = emojis[3]; // 💗
+        else if (typeRand < 0.85) item = emojis[4]; // 💞
+        else if (typeRand < 0.9) item = emojis[5]; // 💪
+        else item = emojis[Math.floor(Math.random() * emojis.length)];
+
+        const el = document.createElement('div');
+        el.className = `particle ${item.cls}`;
+
+        // 表情符号
+        const span = document.createElement('span');
+        span.className = 'emoji';
+        span.textContent = item.text;
+        el.appendChild(span);
+
+        // 随机参数
+        const size = rand(20, 45); // px
+        const x = rand(-20, window.innerWidth + 20); // 起始X位置，稍微超出边界
+        const drift = rand(-150, 150); // 漂移距离
+        const rotStart = rand(-30, 30);
+        const rotEnd = rotStart + (Math.random() < 0.5 ? -1 : 1) * rand(180, 720);
+        const dur = rand(7, 12); // 持续时间秒
+
+        el.style.setProperty('--size', size + 'px');
+        el.style.setProperty('--x', x + 'px');
+        el.style.setProperty('--drift', drift + 'px');
+        el.style.setProperty('--rot', rotStart + 'deg');
+        el.style.setProperty('--rotEnd', rotEnd + 'deg');
+        el.style.setProperty('--dur', dur + 's');
+
+        document.body.appendChild(el);
+        count++;
+
+        el.addEventListener('animationend', () => {
+          el.remove();
+          count--;
+        });
+      }
+
+      function tick() {
+        if (!running) return;
+        for (let i = 0; i < SPAWN_PER_TICK; i++) createParticle();
+      }
+
+      let timer = setInterval(tick, TICK_MS);
+
+      // 页面可见性控制
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          running = false;
+        } else {
+          running = true;
+        }
+      });
+
+      // 初始爆发效果
+      for (let i = 0; i < 24; i++) {
+        setTimeout(() => createParticle(), i * 70);
+      }
+
+      // 窗口大小改变处理
+      window.addEventListener('resize', () => {
+        // 新粒子会使用更新后的窗口宽度
+      });
+
+      // 点击页面创建额外粒子
+      document.addEventListener('click', (e) => {
+        // 点击时产生更少的粒子并拉长时间间隔，降低瞬时压力
+        for (let i = 0; i < 6; i++) {
+          setTimeout(() => {
+            if (count < MAX_PARTICLES) {
+              const el = document.createElement('div');
+              const item = emojis[Math.floor(Math.random() * 6)]; // 只用前6个（主要是爱心）
+              el.className = `particle ${item.cls}`;
+              
+              const span = document.createElement('span');
+              span.className = 'emoji';
+              span.textContent = item.text;
+              el.appendChild(span);
+
+              const size = rand(25, 50);
+              const x = e.clientX + rand(-100, 100);
+              const drift = rand(-200, 200);
+              const rotStart = rand(-45, 45);
+              const rotEnd = rotStart + (Math.random() < 0.5 ? -1 : 1) * rand(360, 900);
+              const dur = rand(5, 8);
+
+              el.style.setProperty('--size', size + 'px');
+              el.style.setProperty('--x', x + 'px');
+              el.style.setProperty('--drift', drift + 'px');
+              el.style.setProperty('--rot', rotStart + 'deg');
+              el.style.setProperty('--rotEnd', rotEnd + 'deg');
+              el.style.setProperty('--dur', dur + 's');
+
+              document.body.appendChild(el);
+              count++;
+
+              el.addEventListener('animationend', () => {
+                el.remove();
+                count--;
+              });
+            }
+          }, i * 100);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
