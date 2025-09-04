@@ -1,0 +1,762 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太阳系探索系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #000;
+            color: #fff;
+        }
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #info-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        #info-panel h2 {
+            margin-bottom: 15px;
+            color: #ffd700;
+            font-size: 24px;
+            text-align: center;
+        }
+        #info-panel p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        #boundary-warning {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(139, 69, 19, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: none;
+            z-index: 100;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.5);
+        }
+        #joystick {
+            position: absolute;
+            bottom: 100px;
+            right: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            touch-action: none;
+            cursor: pointer;
+        }
+        #joystick-knob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        #up-down-controls {
+            position: absolute;
+            bottom: 100px;
+            right: 170px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s;
+        }
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.9);
+        }
+        #speed-control {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(5px);
+        }
+        #speed-slider {
+            width: 150px;
+            height: 5px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+        }
+        #speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        #speed-value {
+            font-size: 14px;
+            color: #ffd700;
+            min-width: 30px;
+            text-align: center;
+        }
+        #reset-view {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        #reset-view:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        #reset-view:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="reset-view">复位</div>
+        <div id="info-panel">
+            <h2 id="planet-name"></h2>
+            <p id="planet-description"></p>
+            <p id="planet-distance"></p>
+            <p id="planet-radius"></p>
+            <p id="planet-mass"></p>
+            <p id="planet-orbit"></p>
+            <p id="planet-rotation"></p>
+        </div>
+        <div id="boundary-warning">你已到达可观测空间边界</div>
+        <div id="joystick">
+            <div id="joystick-knob"></div>
+        </div>
+        <div id="up-down-controls">
+            <div class="control-btn" id="up-btn">↑</div>
+            <div class="control-btn" id="down-btn">↓</div>
+        </div>
+        <div id="speed-control">
+            <span style="font-size: 14px;">移动速度</span>
+            <input type="range" id="speed-slider" min="0.5" max="5" step="0.1" value="2">
+            <span id="speed-value">2.0</span>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 场景设置
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        // 星星
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({ 
+            color: 0xFFFFE0,
+            size: 2.0,
+            transparent: true,
+            opacity: 0.9
+        });
+        const starsVertices = [];
+        for (let i = 0; i < 50000; i++) {
+            const x = (Math.random() - 0.5) * 3000;
+            const y = (Math.random() - 0.5) * 3000;
+            const z = (Math.random() - 0.5) * 3000;
+            starsVertices.push(x, y, z);
+        }
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
+        // 光照
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+        const sunLight = new THREE.PointLight(0xffffff, 5, 2000);
+        sunLight.position.set(0, 0, 0);
+        scene.add(sunLight);
+        // 太阳光晕
+        const sunGlowGeometry = new THREE.BufferGeometry();
+        const sunGlowCount = 8000;
+        const sunGlowPositions = new Float32Array(sunGlowCount * 3);
+        const sunGlowColors = new Float32Array(sunGlowCount * 3);
+        const sunColorCenter = new THREE.Color(0xFFFF00);
+        const sunColorEdge = new THREE.Color(0xFFA500);
+        const sunRadius = 696340 / 1000 * 0.15;
+        for (let i = 0; i < sunGlowCount; i++) {
+            const minRadius = sunRadius + 5;
+            const u = Math.random();
+            const radius = minRadius + 25 * (1 - Math.pow(1 - u, 3));
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            sunGlowPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            sunGlowPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            sunGlowPositions[i * 3 + 2] = radius * Math.cos(phi);
+            const t = (radius - minRadius) / 25;
+            const color = new THREE.Color().lerpColors(sunColorCenter, sunColorEdge, t);
+            sunGlowColors[i * 3] = color.r;
+            sunGlowColors[i * 3 + 1] = color.g;
+            sunGlowColors[i * 3 + 2] = color.b;
+        }
+        sunGlowGeometry.setAttribute('position', new THREE.BufferAttribute(sunGlowPositions, 3));
+        sunGlowGeometry.setAttribute('color', new THREE.BufferAttribute(sunGlowColors, 3));
+        const sunGlowMaterial = new THREE.PointsMaterial({
+            size: 3,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthTest: false
+        });
+        const sunGlow = new THREE.Points(sunGlowGeometry, sunGlowMaterial);
+        scene.add(sunGlow);
+        // 边界（确保边界可见）
+        const boundaryRadius = 1200;
+        const boundaryGeometry = new THREE.SphereGeometry(boundaryRadius, 32, 32);
+        const boundaryMaterial = new THREE.MeshBasicMaterial({
+            color: 0x444444,
+            transparent: true,
+            opacity: 0.02,
+            wireframe: true,
+            side: THREE.BackSide
+        });
+        const boundary = new THREE.Mesh(boundaryGeometry, boundaryMaterial);
+        scene.add(boundary);
+        // 边界墙（确保半透明边界墙可见）
+        const boundaryWallGeometry = new THREE.SphereGeometry(boundaryRadius, 32, 32);
+        const boundaryWallMaterial = new THREE.MeshPhongMaterial({
+            color: 0x0066ff,
+            transparent: true,
+            opacity: 0.05,
+            side: THREE.DoubleSide,
+            visible: true
+        });
+        const boundaryWall = new THREE.Mesh(boundaryWallGeometry, boundaryWallMaterial);
+        scene.add(boundaryWall);
+        // 太阳系数据
+        const solarSystemData = {
+            sun: {
+                name: '太阳',
+                radius: 696340,
+                distance: 0,
+                speed: 0,
+                color: 0xffd700,
+                description: '太阳是一颗G型主序星，占据了太阳系总质量的99.86%。其核心温度高达1500万摄氏度，通过核聚变反应产生巨大的能量。太阳表面温度约5500℃，每秒钟向太空辐射约3.86×10²⁶焦耳的能量。',
+                mass: '1.989 × 10³⁰ kg',
+                realDistance: '/',
+                orbitPeriod: '/',
+                rotationPeriod: '25-35天'
+            },
+            mercury: {
+                name: '水星',
+                radius: 2439.7,
+                distance: 80,
+                speed: 0.08,
+                color: 0x8c7853,
+                description: '水星是离太阳最近的行星，表面遍布陨石坑。由于几乎没有大气层，昼夜温差极大（-173℃到427℃）。水星的一天相当于地球的59天，公转周期约88个地球日。',
+                mass: '3.301 × 10²³ kg',
+                realDistance: '5790万 km',
+                orbitPeriod: '88天',
+                rotationPeriod: '58.6天'
+            },
+            venus: {
+                name: '金星',
+                radius: 6051.8,
+                distance: 210,
+                speed: 0.06,
+                color: 0xffc649,
+                description: '金星是太阳系中最热的行星，表面温度高达462℃，足以熔化铅。它拥有浓厚的二氧化碳大气层，造成极端的温室效应。金星自转方向与其他行星相反，一天比一年还长。',
+                mass: '4.867 × 10²⁴ kg',
+                realDistance: '1.082亿 km',
+                orbitPeriod: '225天',
+                rotationPeriod: '243天'
+            },
+            earth: {
+                name: '地球',
+                radius: 6371,
+                distance: 250,
+                speed: 0.05,
+                color: 0x2233ff,
+                description: '地球是目前已知唯一存在生命的行星，拥有液态水、适宜的大气和磁场保护。地球表面71%被水覆盖，自转周期23小时56分，公转周期365.25天。月球是地球唯一的天然卫星。',
+                mass: '5.972 × 10²⁴ kg',
+                realDistance: '1.496亿 km',
+                orbitPeriod: '365.25天',
+                rotationPeriod: '23.93小时'
+            },
+            mars: {
+                name: '火星',
+                radius: 3389.5,
+                distance: 200,
+                speed: 0.04,
+                color: 0xff4500,
+                description: '火星被称为"红色星球"，因表面富含氧化铁而呈现红色。火星拥有太阳系最大的火山奥林匹斯山（高21公里）和最深的峡谷水手号峡谷。科学家发现火星曾有液态水存在的证据。',
+                mass: '6.417 × 10²³ kg',
+                realDistance: '2.279亿 km',
+                orbitPeriod: '687天',
+                rotationPeriod: '24.6小时'
+            },
+            jupiter: {
+                name: '木星',
+                radius: 69911,
+                distance: 300,
+                speed: 0.02,
+                color: 0x8b7355,
+                description: '木星是太阳系最大的行星，质量是其他所有行星总和的2.5倍。其标志性的大红斑是一个持续了至少400年的巨大风暴，直径可容纳两个地球。木星拥有79颗已知卫星，包括四颗伽利略卫星。',
+                mass: '1.898 × 10²⁷ kg',
+                realDistance: '7.786亿 km',
+                orbitPeriod: '11.86年',
+                rotationPeriod: '9.93小时'
+            },
+            saturn: {
+                name: '土星',
+                radius: 58232,
+                distance: 400,
+                speed: 0.015,
+                color: 0xfad5a5,
+                description: '土星以其壮观的环系统而闻名，环主要由冰粒和岩石碎片组成，厚度不足1公里。土星密度小于水，理论上可以浮在水面上。它拥有82颗已知卫星，其中土卫六是第二大卫星。',
+                mass: '5.683 × 10²⁶ kg',
+                realDistance: '14.27亿 km',
+                orbitPeriod: '29.46年',
+                rotationPeriod: '10.7小时'
+            },
+            uranus: {
+                name: '天王星',
+                radius: 25362,
+                distance: 500,
+                speed: 0.01,
+                color: 0x4fd0e7,
+                description: '天王星是一颗冰巨星，独特之处在于其自转轴几乎平行于轨道平面（倾斜98度），像是"躺着"绕太阳公转。大气主要由氢、氦和甲烷组成，甲烷使其呈现蓝绿色。天王星拥有27颗已知卫星。',
+                mass: '8.681 × 10²⁵ kg',
+                realDistance: '28.71亿 km',
+                orbitPeriod: '84.01年',
+                rotationPeriod: '17.2小时'
+            },
+            neptune: {
+                name: '海王星',
+                radius: 24622,
+                distance: 600,
+                speed: 0.008,
+                color: 0x3f5cff,
+                description: '海王星是太阳系最远的行星，风速可达2100公里/小时，是太阳系中风速最快的行星。其大气含有甲烷，呈现深蓝色。海王星通过数学计算预测存在，而非直接观测发现，拥有14颗已知卫星。',
+                mass: '1.024 × 10²⁶ kg',
+                realDistance: '44.95亿 km',
+                orbitPeriod: '164.8年',
+                rotationPeriod: '16.1小时'
+            }
+        };
+        // 创建太阳和行星
+        const celestialBodies = {};
+        const orbitPaths = {};
+        Object.keys(solarSystemData).forEach(key => {
+            const data = solarSystemData[key];
+            let scale;
+            if (key === 'sun') {
+                scale = 0.15;
+            } else if (key === 'jupiter' || key === 'saturn') {
+                scale = 0.4;
+            } else if (key === 'neptune' || key === 'uranus') {
+                scale = 0.8;
+            } else {
+                scale = 1.2;
+            }
+            const radius = (data.radius / 1000) * scale;
+            const material = new THREE.MeshStandardMaterial({ 
+                color: data.color,
+                roughness: key === 'sun' ? 0 : 0.7,
+                metalness: key === 'sun' ? 1 : 0.2,
+                emissive: key === 'sun' ? data.color : 0x000000,
+                emissiveIntensity: key === 'sun' ? 1.0 : 0
+            });
+            const geometry = new THREE.SphereGeometry(radius, 64, 64);
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.userData = { ...data, displayRadius: radius };
+            if (key !== 'sun') {
+                mesh.position.x = data.distance;
+                const orbitGeometry = new THREE.RingGeometry(data.distance - 0.5, data.distance + 0.5, 128);
+                const orbitMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFFFFF,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                scene.add(orbit);
+                orbitPaths[key] = orbit;
+                if (key === 'saturn') {
+                    createSaturnRings(mesh, radius);
+                } else if (key === 'jupiter') {
+                    createJupiterRings(mesh, radius);
+                }
+            }
+            scene.add(mesh);
+            celestialBodies[key] = mesh;
+        });
+        // 创建土星环
+        function createSaturnRings(planet, planetRadius) {
+            const ringInnerRadius = planetRadius * 1.4;
+            const ringOuterRadius = planetRadius * 2.2;
+            const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 128);
+            const ringMaterial = new THREE.MeshStandardMaterial({
+                color: 0xd4c88e,
+                roughness: 0.8,
+                metalness: 0.2,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = Math.PI / 3;
+            planet.add(ring);
+            const innerRingGeometry = new THREE.RingGeometry(ringInnerRadius * 0.9, ringInnerRadius, 64);
+            const innerRingMaterial = new THREE.MeshStandardMaterial({
+                color: 0xc2b678,
+                roughness: 0.9,
+                metalness: 0.1,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.7
+            });
+            const innerRing = new THREE.Mesh(innerRingGeometry, innerRingMaterial);
+            innerRing.rotation.x = Math.PI / 3;
+            planet.add(innerRing);
+        }
+        // 创建木星环
+        function createJupiterRings(planet, planetRadius) {
+            const ringInnerRadius = planetRadius * 1.8;
+            const ringOuterRadius = planetRadius * 2.5;
+            const ringGeometry = new THREE.RingGeometry(ringInnerRadius, ringOuterRadius, 128);
+            const ringMaterial = new THREE.MeshStandardMaterial({
+                color: 0xb8a392,
+                roughness: 0.9,
+                metalness: 0.1,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.6
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            ring.rotation.x = Math.PI / 2.5;
+            planet.add(ring);
+        }
+        // 相机初始位置和状态
+        const initialCameraPosition = new THREE.Vector3(300, 200, 300);
+        const initialLookAt = new THREE.Vector3(0, 0, 0);
+        // 保存用户状态的关键变量
+        let cameraPosition = initialCameraPosition.clone();
+        let cameraLookAt = initialLookAt.clone();
+        let cameraUp = new THREE.Vector3(0, 1, 0);
+        let cameraDistance = cameraPosition.distanceTo(cameraLookAt);
+        let cameraAzimuth = 0;
+        let cameraElevation = 0;
+        // 控制器变量
+        let moveSpeed = 2;
+        let moveDirection = { x: 0, y: 0, z: 0 };
+        let isColliding = false;
+        // 触摸控制
+        let touchStartPos = { x: 0, y: 0 };
+        let isDragging = false;
+        let isPanning = false;
+        // 摇杆控制
+        const joystick = document.getElementById('joystick');
+        const joystickKnob = document.getElementById('joystick-knob');
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        // 摇杆事件
+        function handleJoystickStart(e) {
+            e.preventDefault();
+            joystickActive = true;
+            const rect = joystick.getBoundingClientRect();
+            joystickCenter.x = rect.left + rect.width / 2;
+            joystickCenter.y = rect.top + rect.height / 2;
+        }
+        function handleJoystickMove(e) {
+            if (!joystickActive) return;
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - joystickCenter.x;
+            const deltaY = touch.clientY - joystickCenter.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const maxDistance = 40;
+            let moveX = 0, moveZ = 0;
+            if (distance <= maxDistance) {
+                moveX = deltaX / maxDistance;
+                moveZ = -deltaY / maxDistance;
+                joystickKnob.style.transform = `translate(${deltaX - 20}px, ${deltaY - 20}px)`;
+            } else {
+                moveX = deltaX / distance;
+                moveZ = -deltaY / distance;
+                joystickKnob.style.transform = `translate(${deltaX / distance * maxDistance - 20}px, ${deltaY / distance * maxDistance - 20}px)`;
+            }
+            moveDirection.x = moveX;
+            moveDirection.z = moveZ;
+            moveDirection.y = 0;
+        }
+        function handleJoystickEnd() {
+            joystickActive = false;
+            joystickKnob.style.transform = 'translate(-50%, -50%)';
+            moveDirection.x = 0;
+            moveDirection.z = 0;
+        }
+        // 上下控制
+        document.getElementById('up-btn').addEventListener('touchstart', () => {
+            moveDirection.y = 1;
+        });
+        document.getElementById('up-btn').addEventListener('touchend', () => {
+            moveDirection.y = 0;
+        });
+        document.getElementById('down-btn').addEventListener('touchstart', () => {
+            moveDirection.y = -1;
+        });
+        document.getElementById('down-btn').addEventListener('touchend', () => {
+            moveDirection.y = 0;
+        });
+        // 鼠标控制
+        joystick.addEventListener('mousedown', handleJoystickStart);
+        document.addEventListener('mousemove', handleJoystickMove);
+        document.addEventListener('mouseup', handleJoystickEnd);
+        // 触摸事件
+        joystick.addEventListener('touchstart', handleJoystickStart);
+        joystick.addEventListener('touchmove', handleJoystickMove);
+        joystick.addEventListener('touchend', handleJoystickEnd);
+        // 视角旋转 - 使用四元数系统
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            if (e.target === joystick || e.target.parentElement === joystick) return;
+            isDragging = true;
+            touchStartPos.x = e.touches[0].clientX;
+            touchStartPos.y = e.touches[0].clientY;
+        });
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.touches[0].clientX - touchStartPos.x;
+            const deltaY = e.touches[0].clientY - touchStartPos.y;
+            // 计算旋转轴和角度
+            const rotationSpeed = 0.005;
+            const axis = new THREE.Vector3(-deltaY, deltaX, 0).normalize();
+            const angle = Math.sqrt(deltaX * deltaX + deltaY * deltaY) * rotationSpeed;
+            // 创建旋转四元数
+            const rotation = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+            // 应用旋转到相机位置相对lookAt点
+            const offset = cameraPosition.clone().sub(cameraLookAt);
+            offset.applyQuaternion(rotation);
+            cameraPosition.copy(cameraLookAt).add(offset);
+            touchStartPos.x = e.touches[0].clientX;
+            touchStartPos.y = e.touches[0].clientY;
+            updateCamera();
+            checkBoundary();
+        });
+        renderer.domElement.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+        // 缩放控制 - 保持当前视角
+        renderer.domElement.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const scale = e.deltaY > 0 ? 1.1 : 0.9;
+            // 计算从lookAt到相机的向量
+            const direction = cameraPosition.clone().sub(cameraLookAt).normalize();
+            const newDistance = cameraPosition.distanceTo(cameraLookAt) * scale;
+            const minDistance = 10;
+            const maxDistance = boundaryRadius - 5;
+            if (newDistance >= minDistance && newDistance <= maxDistance) {
+                cameraPosition.copy(cameraLookAt).add(direction.multiplyScalar(newDistance));
+                updateCamera();
+                checkBoundary();
+            }
+        });
+        // 点击检测
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        renderer.domElement.addEventListener('click', (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(Object.values(celestialBodies));
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                showInfo(object.userData);
+            } else if (e.target !== document.getElementById('info-panel') && !document.getElementById('info-panel').contains(e.target)) {
+                hideInfo();
+            }
+        });
+        // 速度控制
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        speedSlider.addEventListener('input', (e) => {
+            moveSpeed = parseFloat(e.target.value);
+            speedValue.textContent = moveSpeed.toFixed(1);
+        });
+        // 显示信息
+        function showInfo(data) {
+            document.getElementById('planet-name').textContent = data.name;
+            document.getElementById('planet-description').textContent = data.description;
+            document.getElementById('planet-distance').textContent = `距离太阳: ${data.realDistance}`;
+            document.getElementById('planet-radius').textContent = `半径: ${data.radius.toLocaleString()} km`;
+            document.getElementById('planet-mass').textContent = `质量: ${data.mass}`;
+            document.getElementById('planet-orbit').textContent = `公转周期: ${data.orbitPeriod}`;
+            document.getElementById('planet-rotation').textContent = `自转周期: ${data.rotationPeriod}`;
+            document.getElementById('info-panel').style.display = 'block';
+        }
+        function hideInfo() {
+            document.getElementById('info-panel').style.display = 'none';
+        }
+        // 边界检测和警告
+        function checkBoundary() {
+            // 计算相机位置到太阳系中心(0,0,0)的距离
+            const distanceToCenter = cameraPosition.length();
+            const safeRadius = boundaryRadius - 5;
+            if (distanceToCenter >= safeRadius) {
+                if (!isColliding) {
+                    isColliding = true;
+                    document.getElementById('boundary-warning').style.display = 'block';
+                }
+                // 记录调整前的相机位置
+                const oldPosition = cameraPosition.clone();
+                // 计算新的相机位置（在边界内）
+                const direction = cameraPosition.clone().normalize();
+                cameraPosition.copy(direction.multiplyScalar(safeRadius));
+                // 计算偏移量
+                const offset = cameraPosition.clone().sub(oldPosition);
+                // 调整观察点以保持视角不变
+                cameraLookAt.add(offset);
+                updateCamera();
+            } else {
+                if (isColliding) {
+                    isColliding = false;
+                    document.getElementById('boundary-warning').style.display = 'none';
+                }
+            }
+        }
+        // 更新相机位置和朝向
+        function updateCamera() {
+            camera.position.copy(cameraPosition);
+            camera.lookAt(cameraLookAt);
+        }
+        // 重置视角功能
+        document.getElementById('reset-view').addEventListener('click', function() {
+            let start;
+            const duration = 1000;
+            const startPosition = cameraPosition.clone();
+            const startLookAt = cameraLookAt.clone();
+            function resetAnimation(timestamp) {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                cameraPosition.lerp(initialCameraPosition, progress);
+                cameraLookAt.lerp(initialLookAt, progress);
+                updateCamera();
+                checkBoundary();
+                if (progress < 1) {
+                    requestAnimationFrame(resetAnimation);
+                } else {
+                    moveDirection = { x: 0, y: 0, z: 0 };
+                    document.getElementById('boundary-warning').style.display = 'none';
+                    isColliding = false;
+                }
+            }
+            requestAnimationFrame(resetAnimation);
+        });
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            // 更新行星位置
+            Object.keys(solarSystemData).forEach(key => {
+                if (key !== 'sun') {
+                    const body = celestialBodies[key];
+                    const data = solarSystemData[key];
+                    const time = Date.now() * 0.001;
+                    body.position.x = Math.cos(time * data.speed) * data.distance;
+                    body.position.z = Math.sin(time * data.speed) * data.distance;
+                    body.rotation.y += 0.01;
+                }
+            });
+            // 更新相机位置
+            if (moveDirection.x !== 0 || moveDirection.z !== 0 || moveDirection.y !== 0) {
+                const forward = new THREE.Vector3(0, 0, -1);
+                const right = new THREE.Vector3(1, 0, 0);
+                const up = new THREE.Vector3(0, 1, 0);
+                // 获取相机的方向
+                const cameraQuaternion = camera.quaternion;
+                forward.applyQuaternion(cameraQuaternion);
+                right.applyQuaternion(cameraQuaternion);
+                up.applyQuaternion(cameraQuaternion);
+                const moveVector = new THREE.Vector3();
+                moveVector.addScaledVector(right, moveDirection.x);
+                moveVector.addScaledVector(forward, moveDirection.z);
+                moveVector.addScaledVector(up, moveDirection.y);
+                // 移动相机和lookAt点一起移动
+                cameraPosition.addScaledVector(moveVector, moveSpeed);
+                cameraLookAt.addScaledVector(moveVector, moveSpeed);
+                updateCamera();
+                checkBoundary();
+            }
+            celestialBodies.sun.rotation.y += 0.002;
+            renderer.render(scene, camera);
+        }
+        // 窗口调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        // 初始化相机
+        updateCamera();
+        animate();
+    </script>
+</body>
+</html>
+```
+
